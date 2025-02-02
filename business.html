@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customizable E-Commerce Template</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        nav {
+            background-color: #333;
+            color: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+            border-radius: 5px;
+            padding: 5px 10px;
+            transition: background-color 0.3s;
+        }
+        nav a:hover {
+            background-color: #555;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+        }
+        .banner {
+            position: relative;
+            height: 300px;
+            background-color: #ccc;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 100%; /* Ensure the banner is responsive */
+        }
+        .banner p {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+            width: calc(100% - 40px);
+        }
+        .banner p[contenteditable] {
+            outline: none;
+        }
+        .tools {
+            margin: 20px;
+            text-align: center;
+        }
+        #products {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+            width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+        }
+        .product-card img {
+            max-width: 100%;
+            border-radius: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .product-card h3,
+        .product-card p,
+        .product-card .price {
+            margin: 10px 0;
+        }
+        .product-card .delete-btn {
+            background-color: #dc3545;
+            color: #fff;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border-radius: 50%;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .file-upload {
+            margin: 10px;
+        }
+        .hide-when-saving {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Customizable E-Commerce</h1>
+    </header>
+    <div class="banner">
+        <p contenteditable="true">Add your contact number here.</p>
+    </div>
+    <div class="tools">
+        <button onclick="addNavbarTitle()">Add Navbar Title</button>
+        <input type="color" id="fontColorPicker" onchange="changeFontColor()" value="#000">
+        <button onclick="uploadPhotoBanner()">Upload Banner Photo</button>
+        <button onclick="addProductCard()">Add Product Card</button>
+        <button onclick="saveAsHTML()">Save as New File</button>
+    </div>
+    <section id="products">
+        <!-- Product cards will be added here -->
+    </section>
+    <script>
+        function addNavbarTitle() {
+            const header = document.querySelector('header h1');
+            const title = prompt('Enter the title for the navbar:');
+            if (title) {
+                header.textContent = title;
+            }
+        }
+
+        function changeFontColor() {
+            const fontColorPicker = document.getElementById('fontColorPicker');
+            document.body.style.color = fontColorPicker.value;
+        }
+
+        function addProductCard() {
+            const productsSection = document.getElementById('products');
+            const newCard = document.createElement('div');
+            newCard.className = 'product-card';
+            newCard.innerHTML = `
+                <h3 contenteditable="true">New Product</h3>
+                <p contenteditable="true">Description of the new product.</p>
+                <p class="price" contenteditable="true">$0.00</p>
+                <input type="file" class="file-upload" accept="image/*" onchange="uploadImageToProductCard(this)">
+                <button class="delete-btn" onclick="deleteProductCard(this)">X</button>
+            `;
+            productsSection.appendChild(newCard);
+        }
+
+        function deleteProductCard(button) {
+            const card = button.closest('.product-card');
+            card.remove();
+        }
+
+        function uploadImageToProductCard(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const card = input.closest('.product-card');
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                card.insertBefore(img, card.querySelector('h3'));
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function uploadPhotoBanner() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = () => {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = () => {
+                    document.querySelector('.banner').style.backgroundImage = `url(${reader.result})`;
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+
+        function saveAsHTML() {
+            const tools = document.querySelector('.tools');
+            tools.classList.add('hide-when-saving');
+            const bannerText = document.querySelector('.banner p');
+            bannerText.removeAttribute('contenteditable');
+            const productCards = document.querySelectorAll('.product-card');
+            productCards.forEach(card => {
+                const editableElements = card.querySelectorAll('[contenteditable]');
+                editableElements.forEach(element => element.removeAttribute('contenteditable'));
+            });
+            const copyHtml = document.documentElement.outerHTML
+                .replace(/<input type="file" class="file-upload" accept="image\/\*" onchange="uploadImageToProductCard\(this\)">/g, '')
+                .replace(/<button class="delete-btn" onclick="deleteProductCard\(this\)">X<\/button>/g, '');
+            const blob = new Blob([copyHtml], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'customizable_ecommerce_store_copy.html';
+            link.click();
+            window.location.reload();
+            tools.classList.remove('hide-when-saving');
+        }
+    </script>
+</body>
+</html>
